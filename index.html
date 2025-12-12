@@ -345,7 +345,10 @@ function normalizeKey(str) {
     .trim();
 }
 
-  function importEmailsFromExcel(input, targetId) {
+
+  
+
+ function importEmailsFromExcel(input, targetId) {
   if (input && input.files && input.files[0]) {
     lastExcelFile = input.files[0];
   }
@@ -354,11 +357,17 @@ function normalizeKey(str) {
     return;
   }
 
+  const TYPES_SANS_REGION = [
+    "compte rendu",
+    "synthese nationale lot1"
+  ];
+
   const reader = new FileReader();
   reader.onload = function (e) {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: "array" });
 
+    // --- Récupération onglet Mail ---
     const sheet = getMailSheet(workbook);
     if (!sheet) {
       alert("Aucun onglet contenant 'mail' trouvé dans l'Excel");
@@ -375,25 +384,30 @@ function normalizeKey(str) {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
-      const typeExcel = normalizeKey(row[0]); // ✅ Colonne A
-      const descExcel = normalizeKey(row[1]); // ✅ Colonne B
+      const typeExcel = normalizeKey(row[0]); // Col A : Type Mail
+      const descExcel = normalizeKey(row[1]); // Col B : Description Mail
 
+      // --- Match type ---
       const typeMatch =
         typeExcel.includes(typeUI) || typeUI.includes(typeExcel);
 
-      const regionMatch =
-        !regionUI || descExcel.includes(regionUI);
+      if (!typeMatch) continue;
 
-      if (typeMatch && regionMatch) {
-        const imported =
-          targetId === "toEmails" ? row[2] : row[3];
+      // --- Gestion région ---
+      const ignoreRegion = TYPES_SANS_REGION.includes(typeUI);
+      const regionMatch = ignoreRegion || descExcel.includes(regionUI);
 
-        document.getElementById(targetId).value =
-          normalizeEmails(imported || "").join("; ");
+      if (!regionMatch) continue;
 
-        found = true;
-        break;
-      }
+      // --- Récupération emails ---
+      const imported =
+        targetId === "toEmails" ? row[2] : row[3]; // C = TO / D = CC
+
+      document.getElementById(targetId).value =
+        normalizeEmails(imported || "").join("; ");
+
+      found = true;
+      break;
     }
 
     if (!found) {
@@ -484,5 +498,6 @@ function normalizeKey(str) {
   </script>
 </body>
 </html>
+
 
 
