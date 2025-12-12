@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Générateur de Mails - Circet</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -13,73 +12,87 @@
       margin: 0;
       padding: 20px;
     }
-
     header {
       background: linear-gradient(135deg, #ff7a00, #b85c00);
       padding: 15px 20px;
       display: flex;
       align-items: center;
       color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       border-radius: 8px;
       margin-bottom: 25px;
     }
-
     header img {
       height: 60px;
       margin-right: 20px;
       border-radius: 6px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.2);
+      padding: 4px;
     }
-
+    h1 {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 0;
+    }
+    h2 {
+      margin-top: 30px;
+      color: #ffb347;
+      border-left: 5px solid #ff7a00;
+      padding-left: 10px;
+    }
     section {
       background: #1b263b;
       padding: 20px;
       margin-bottom: 25px;
       border-radius: 10px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.5);
     }
-
     label {
       display: block;
       margin: 10px 0 5px;
       font-weight: 600;
       color: #ffb347;
     }
-
-    select, input, textarea {
+    select, input[type="date"], input[type="text"], textarea {
       width: 100%;
       max-width: 600px;
       padding: 10px;
-      border-radius: 8px;
       border: none;
+      border-radius: 8px;
+      outline: none;
+      font-size: 14px;
       background: #0d1b2a;
-      color: #fff;
+      color: #f4f4f4;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
     }
-
-    textarea { min-height: 70px; }
-
+    textarea {
+      min-height: 70px;
+    }
+    .button {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #ff7a00, #e65c00);
+      color: #fff;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .recipients {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .recipients textarea {
+      flex: 1;
+    }
     .row {
       display: flex;
       gap: 20px;
       flex-wrap: wrap;
-    }
-
-    .recipients {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .recipients textarea { flex: 1; }
-
-    .button {
-      margin-top: 12px;
-      padding: 12px 25px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      background: linear-gradient(135deg, #ff7a00, #e65c00);
-      color: #fff;
+      align-items: flex-end;
     }
   </style>
 </head>
@@ -87,29 +100,26 @@
 <body>
 
 <header>
-  <img src="https://i.imgur.com/gfK7XhS.png">
+  <img src="https://i.imgur.com/gfK7XhS.png" alt="Logo Circet">
   <h1>Générateur de mails Circet Orange Fibre</h1>
 </header>
 
 <section>
   <div class="row">
     <div>
-      <label>Type de mail</label>
+      <label>Type de mail :</label>
       <select id="typeMail"></select>
     </div>
-
     <div>
-      <label>Région</label>
+      <label>Région :</label>
       <select id="region"></select>
     </div>
-
     <div>
-      <label>Date</label>
-      <input type="date" id="date">
+      <label>Date :</label>
+      <input type="date" id="date" />
     </div>
-
     <div>
-      <label>Heure</label>
+      <label>Heure :</label>
       <select id="heure">
         <option>10h</option>
         <option>12h</option>
@@ -121,86 +131,80 @@
     </div>
   </div>
 
-  <label>📧 Destinataires</label>
+  <label>📧 Destinataires :</label>
   <div class="recipients">
     <textarea id="toEmails"></textarea>
-    <button class="button" onclick="handleImport('toEmails')">Importer</button>
-    <input type="file" id="importTo" hidden accept=".xls,.xlsx"
-           onchange="importEmailsFromExcel(this,'toEmails')">
+    <button class="button" onclick="handleImport('toEmails')">📂 Importer destinataires</button>
+    <input type="file" id="importTo" style="display:none" accept=".xls,.xlsx"
+           onchange="importEmailsFromExcel(this, 'toEmails')" />
   </div>
 
-  <label>📤 CC</label>
+  <label>📤 En copie (CC) :</label>
   <div class="recipients">
     <textarea id="ccEmails"></textarea>
-    <button class="button" onclick="handleImport('ccEmails')">Importer</button>
-    <input type="file" id="importCC" hidden accept=".xls,.xlsx"
-           onchange="importEmailsFromExcel(this,'ccEmails')">
+    <button class="button" onclick="handleImport('ccEmails')">📂 Importer en copie (CC)</button>
+    <input type="file" id="importCC" style="display:none" accept=".xls,.xlsx"
+           onchange="importEmailsFromExcel(this, 'ccEmails')" />
   </div>
 
   <button class="button" onclick="genererMail()">📧 Générer le mail</button>
 </section>
 
 <section>
-  <label>Objet</label>
+  <h2>Objet du mail :</h2>
   <textarea id="objet" readonly></textarea>
 
-  <label>Corps</label>
+  <h2>Corps du mail :</h2>
   <textarea id="corps" readonly></textarea>
 
-  <button class="button" onclick="ouvrirOutlook()">Ouvrir Outlook</button>
+  <button class="button" onclick="ouvrirOutlook()">📤 Ouvrir dans Outlook</button>
 </section>
 
 <script>
-/* ================= MODELES ================= */
-
 const modeles = {
   "Avancement": {
     objet: "Avancement prod {REGION} {DATE}",
-    corps: "Bonjour,\nAvancement à {HEURE} ci-dessous."
+    corps: "{MESSAGE}\nAvancement à {HEURE} ci-dessous, détails en PJ."
   },
   "Synthèse du soir": {
     objet: "Synthèse {DATE} {REGION}",
-    corps: "Bonjour,\nSynthèse du jour ci-dessous."
+    corps: "Bonjour,\nVous trouverez ci-dessous un aperçu des indicateurs du jour."
   }
 };
 
-const regions = ["IDF","CVL","Corse","PRM","63/03","74/01","Lot 2 PDL"];
+function chargerMenus() {
+  const typeSel = document.getElementById("typeMail");
+  const regionSel = document.getElementById("region");
 
-const TYPE_EXCEL_MAP = {
-  "Avancement": "avancement de prod",
-  "Synthèse du soir": "synthèse du soir"
-};
+  Object.keys(modeles).forEach(t => typeSel.add(new Option(t, t)));
+  ["IDF","CVL","Corse","PRM","63/03","74/01"].forEach(r => regionSel.add(new Option(r, r)));
+}
 
 let lastExcelFile = null;
 
-/* ================= INIT ================= */
-
-window.onload = () => {
-  const t = document.getElementById("typeMail");
-  Object.keys(modeles).forEach(x => t.add(new Option(x,x)));
-
-  const r = document.getElementById("region");
-  regions.forEach(x => r.add(new Option(x,x)));
-};
-
-/* ================= OUTILS ================= */
+function normalizeKey(str) {
+  return (str || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function normalizeEmails(str) {
   if (!str) return [];
-  return str.replace(/\s+/g,'')
-            .replace(/[\n,]+/g,';')
+  return str.replace(/[ \t]/g, '')
+            .replace(/[\n\r,]+/g, ';')
             .split(';')
             .filter(Boolean);
 }
 
 function handleImport(targetId) {
   document.getElementById(
-    targetId === "toEmails" ? "importTo" : "importCC"
+    targetId === 'toEmails' ? 'importTo' : 'importCC'
   ).click();
 }
 
-/* ================= EXCEL (CORRIGÉ) ================= */
-
+/* === SEULE PARTIE CORRIGÉE === */
 function importEmailsFromExcel(input, targetId) {
   if (input.files && input.files[0]) lastExcelFile = input.files[0];
   if (!lastExcelFile) return;
@@ -209,55 +213,50 @@ function importEmailsFromExcel(input, targetId) {
   reader.onload = e => {
     const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
     const sheet = wb.Sheets["Mail"];
-    if (!sheet) return alert("Onglet 'Mail' introuvable");
+    if (!sheet) return alert("Onglet Mail introuvable");
 
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }).slice(1);
 
-    const typeUI = document.getElementById("typeMail").value;
-    const region = document.getElementById("region").value.toLowerCase();
-    const typeExcel = (TYPE_EXCEL_MAP[typeUI] || typeUI).toLowerCase();
+    const typeUI = normalizeKey(typeMail.value);
+    const regionUI = normalizeKey(region.value);
 
     for (const row of rows) {
-      const description = (row[1] || "").toLowerCase();
-      if (description.includes(typeExcel) && description.includes(region)) {
+      const description = normalizeKey(row[1]); // colonne B
+      if (description.includes(typeUI) && description.includes(regionUI)) {
         const emails = targetId === "toEmails" ? row[2] : row[3];
         document.getElementById(targetId).value =
           normalizeEmails(emails).join("; ");
         return;
       }
     }
-
     alert("Aucune correspondance trouvée dans l'Excel");
   };
-
   reader.readAsArrayBuffer(lastExcelFile);
 }
 
-/* ================= MAIL ================= */
-
 function genererMail() {
-  const type = typeMail.value;
-  const region = region.value;
   const d = new Date(date.value);
   if (isNaN(d)) return alert("Date manquante");
 
-  objet.value = modeles[type].objet
-    .replace("{REGION}",region)
-    .replace("{DATE}",d.toLocaleDateString("fr-FR"));
+  objet.value = modeles[typeMail.value].objet
+    .replace("{REGION}", region.value)
+    .replace("{DATE}", d.toLocaleDateString("fr-FR"));
 
-  corps.value = modeles[type].corps
-    .replace("{HEURE}",heure.value);
+  corps.value = modeles[typeMail.value].corps
+    .replace("{HEURE}", heure.value)
+    .replace("{MESSAGE}", "Bonjour à tous,");
 }
 
 function ouvrirOutlook() {
-  const to = encodeURIComponent(toEmails.value);
-  const cc = encodeURIComponent(ccEmails.value);
-  const subject = encodeURIComponent(objet.value);
-  const body = encodeURIComponent(corps.value.replace(/\n/g,"\r\n"));
-
-  window.location.href =
-    `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`;
+  const mailto =
+    `mailto:${encodeURIComponent(toEmails.value)}` +
+    `?cc=${encodeURIComponent(ccEmails.value)}` +
+    `&subject=${encodeURIComponent(objet.value)}` +
+    `&body=${encodeURIComponent(corps.value.replace(/\n/g,"\r\n"))}`;
+  window.location.href = mailto;
 }
+
+window.onload = chargerMenus;
 </script>
 
 </body>
