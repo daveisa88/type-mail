@@ -30,8 +30,6 @@
       border-radius: 6px;
     }
 
-    h1 { margin: 0; }
-
     section {
       background: #1b263b;
       padding: 20px;
@@ -40,17 +38,16 @@
     }
 
     label {
-      margin-top: 10px;
       display: block;
-      color: #ffb347;
+      margin: 10px 0 5px;
       font-weight: 600;
+      color: #ffb347;
     }
 
     select, input, textarea {
       width: 100%;
       max-width: 600px;
       padding: 10px;
-      margin-top: 5px;
       border-radius: 8px;
       border: none;
       background: #0d1b2a;
@@ -65,6 +62,15 @@
       flex-wrap: wrap;
     }
 
+    .recipients {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .recipients textarea { flex: 1; }
+
     .button {
       margin-top: 12px;
       padding: 12px 25px;
@@ -74,17 +80,6 @@
       font-weight: bold;
       background: linear-gradient(135deg, #ff7a00, #e65c00);
       color: #fff;
-    }
-
-    .recipients {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .recipients textarea {
-      flex: 1;
     }
   </style>
 </head>
@@ -142,7 +137,7 @@
            onchange="importEmailsFromExcel(this,'ccEmails')">
   </div>
 
-  <button class="button" onclick="genererMail()">📧 Générer</button>
+  <button class="button" onclick="genererMail()">📧 Générer le mail</button>
 </section>
 
 <section>
@@ -156,16 +151,7 @@
 </section>
 
 <script>
-/* ===================== CONFIG ===================== */
-
-const TYPE_EXCEL_MAP = {
-  "Avancement": "avancement de prod",
-  "Synthèse du soir": "synthèse du soir",
-  "Planification": "planification",
-  "Planning": "planning",
-  "Compte Rendu": "compte-rendu",
-  "Vision Flash": "flash"
-};
+/* ================= MODELES ================= */
 
 const modeles = {
   "Avancement": {
@@ -180,25 +166,24 @@ const modeles = {
 
 const regions = ["IDF","CVL","Corse","PRM","63/03","74/01","Lot 2 PDL"];
 
-let lastExcelFile = null;
-
-/* ===================== INIT ===================== */
-
-window.onload = () => {
-  const typeSel = document.getElementById("typeMail");
-  Object.keys(modeles).forEach(t => typeSel.add(new Option(t,t)));
-
-  const regSel = document.getElementById("region");
-  regions.forEach(r => regSel.add(new Option(r,r)));
+const TYPE_EXCEL_MAP = {
+  "Avancement": "avancement de prod",
+  "Synthèse du soir": "synthèse du soir"
 };
 
-/* ===================== EXCEL ===================== */
+let lastExcelFile = null;
 
-function handleImport(target) {
-  document.getElementById(
-    target === "toEmails" ? "importTo" : "importCC"
-  ).click();
-}
+/* ================= INIT ================= */
+
+window.onload = () => {
+  const t = document.getElementById("typeMail");
+  Object.keys(modeles).forEach(x => t.add(new Option(x,x)));
+
+  const r = document.getElementById("region");
+  regions.forEach(x => r.add(new Option(x,x)));
+};
+
+/* ================= OUTILS ================= */
 
 function normalizeEmails(str) {
   if (!str) return [];
@@ -208,54 +193,60 @@ function normalizeEmails(str) {
             .filter(Boolean);
 }
 
+function handleImport(targetId) {
+  document.getElementById(
+    targetId === "toEmails" ? "importTo" : "importCC"
+  ).click();
+}
+
+/* ================= EXCEL (CORRIGÉ) ================= */
+
 function importEmailsFromExcel(input, targetId) {
-  if (input.files[0]) lastExcelFile = input.files[0];
+  if (input.files && input.files[0]) lastExcelFile = input.files[0];
   if (!lastExcelFile) return;
 
   const reader = new FileReader();
   reader.onload = e => {
-    const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+    const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
     const sheet = wb.Sheets["Mail"];
-    if (!sheet) return alert("Onglet Mail introuvable");
+    if (!sheet) return alert("Onglet 'Mail' introuvable");
 
-    const rows = XLSX.utils.sheet_to_json(sheet,{header:1}).slice(1);
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }).slice(1);
 
     const typeUI = document.getElementById("typeMail").value;
     const region = document.getElementById("region").value.toLowerCase();
     const typeExcel = (TYPE_EXCEL_MAP[typeUI] || typeUI).toLowerCase();
 
-    for (const r of rows) {
-      const desc = (r[1]||"").toLowerCase();
-      if (desc.includes(typeExcel) && desc.includes(region)) {
-        const emails = targetId==="toEmails" ? r[2] : r[3];
+    for (const row of rows) {
+      const description = (row[1] || "").toLowerCase();
+      if (description.includes(typeExcel) && description.includes(region)) {
+        const emails = targetId === "toEmails" ? row[2] : row[3];
         document.getElementById(targetId).value =
           normalizeEmails(emails).join("; ");
         return;
       }
     }
-    alert("Aucune correspondance Excel");
+
+    alert("Aucune correspondance trouvée dans l'Excel");
   };
+
   reader.readAsArrayBuffer(lastExcelFile);
 }
 
-/* ===================== MAIL ===================== */
+/* ================= MAIL ================= */
 
 function genererMail() {
   const type = typeMail.value;
   const region = region.value;
-  const date = new Date(dateInput.value);
-  if (isNaN(date)) return alert("Date manquante");
+  const d = new Date(date.value);
+  if (isNaN(d)) return alert("Date manquante");
 
-  const objet = modeles[type].objet
+  objet.value = modeles[type].objet
     .replace("{REGION}",region)
-    .replace("{DATE}",date.toLocaleDateString("fr-FR"));
+    .replace("{DATE}",d.toLocaleDateString("fr-FR"));
 
-  const corps = modeles[type].corps
-    .replace("{HEURE}",heure.value)
-    .replace("{REGION}",region);
-
-  document.getElementById("objet").value = objet;
-  document.getElementById("corps").value = corps;
+  corps.value = modeles[type].corps
+    .replace("{HEURE}",heure.value);
 }
 
 function ouvrirOutlook() {
