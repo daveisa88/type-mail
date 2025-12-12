@@ -330,45 +330,87 @@ textarea {
         else document.getElementById('importCC').click();
       }
     }
+function getMailSheet(workbook) {
+  const sheetName = workbook.SheetNames.find(n =>
+    n.toLowerCase().includes("mail")
+  );
+  return sheetName ? workbook.Sheets[sheetName] : null;
+}
+
+function normalizeKey(str) {
+  return (str || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlève accents
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
     function importEmailsFromExcel(input, targetId) {
-      if (input && input.files && input.files[0]) {
-        lastExcelFile = input.files[0];
-      }
-      if (!lastExcelFile) {
-        alert("Veuillez sélectionner un fichier Excel.");
-        return;
-      }
+  if (input && input.files && input.files[0]) {
+    lastExcelFile = input.files[0];
+  }
+  if (!lastExcelFile) {
+    alert("Veuillez sélectionner un fichier Excel.");
+    return;
+  }
 
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheet = workbook.Sheets["Mail"];
-        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
 
-        mappings = json;
-        const key = getMatchingKey();
-        const dataRows = json.slice(1);
-
-        let found = false;
-        for (let i = 0; i < dataRows.length; i++) {
-          const row = dataRows[i];
-          const entryKey = (row[0] || "").toString().toLowerCase().trim();
-          if (entryKey === key) {
-            const imported = (targetId === 'toEmails' ? row[1] : row[2]) || "";
-            document.getElementById(targetId).value = normalizeEmails(imported).join('; ');
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          document.getElementById(targetId).value = "";
-          alert("Aucune correspondance trouvée dans l'Excel pour : " + key);
-        }
-      };
-      reader.readAsArrayBuffer(lastExcelFile);
+    // 🔥 ICI la correction onglet
+    const sheet = getMailSheet(workbook);
+    if (!sheet) {
+      alert("Aucun onglet contenant 'mail' trouvé dans l'Excel");
+      return;
     }
+
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const dataRows = json.slice(1);
+
+    // 🔥 ICI la correction matching
+    const typeUI   = normalizeKey(document.getElementById("typeMail").value);
+    const regionUI = normalizeKey(document.getElementById("region").value);
+
+    let found = false;
+
+    for (let i = 0; i < dataRows.length; i++) {
+      const row = dataRows[i];
+
+      // Colonne B = Description Mail (clé métier réelle)
+      const description = normalizeKey(row[1]);
+
+      if (
+        description.includes(typeUI) &&
+        description.includes(regionUI)
+      ) {
+        // Colonne C = Destinataires | Colonne D = CC
+        const imported =
+          targetId === 'toEmails' ? row[2] : row[3];
+
+        document.getElementById(targetId).value =
+          normalizeEmails(imported || "").join("; ");
+
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      document.getElementById(targetId).value = "";
+      alert(
+        "Aucune correspondance trouvée dans l'Excel pour : " +
+        document.getElementById("typeMail").value +
+        " " +
+        document.getElementById("region").value
+      );
+    }
+  };
+
+  reader.readAsArrayBuffer(lastExcelFile);
+}
+
 
     function getFormattedDate(date) {
       if (!date) return "JJ/MM/AAAA";
@@ -443,3 +485,4 @@ textarea {
   </script>
 </body>
 </html>
+
