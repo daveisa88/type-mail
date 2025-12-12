@@ -345,7 +345,7 @@ function normalizeKey(str) {
     .trim();
 }
 
-    function importEmailsFromExcel(input, targetId) {
+  function importEmailsFromExcel(input, targetId) {
   if (input && input.files && input.files[0]) {
     lastExcelFile = input.files[0];
   }
@@ -359,35 +359,34 @@ function normalizeKey(str) {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: "array" });
 
-    // 🔥 ICI la correction onglet
     const sheet = getMailSheet(workbook);
     if (!sheet) {
       alert("Aucun onglet contenant 'mail' trouvé dans l'Excel");
       return;
     }
 
-    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    const dataRows = json.slice(1);
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }).slice(1);
 
-    // 🔥 ICI la correction matching
     const typeUI   = normalizeKey(document.getElementById("typeMail").value);
     const regionUI = normalizeKey(document.getElementById("region").value);
 
     let found = false;
 
-    for (let i = 0; i < dataRows.length; i++) {
-      const row = dataRows[i];
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
 
-      // Colonne B = Description Mail (clé métier réelle)
-      const description = normalizeKey(row[1]);
+      const typeExcel = normalizeKey(row[0]); // ✅ Colonne A
+      const descExcel = normalizeKey(row[1]); // ✅ Colonne B
 
-      if (
-        description.includes(typeUI) &&
-        description.includes(regionUI)
-      ) {
-        // Colonne C = Destinataires | Colonne D = CC
+      const typeMatch =
+        typeExcel.includes(typeUI) || typeUI.includes(typeExcel);
+
+      const regionMatch =
+        !regionUI || descExcel.includes(regionUI);
+
+      if (typeMatch && regionMatch) {
         const imported =
-          targetId === 'toEmails' ? row[2] : row[3];
+          targetId === "toEmails" ? row[2] : row[3];
 
         document.getElementById(targetId).value =
           normalizeEmails(imported || "").join("; ");
@@ -485,4 +484,5 @@ function normalizeKey(str) {
   </script>
 </body>
 </html>
+
 
