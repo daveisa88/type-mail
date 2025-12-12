@@ -332,13 +332,60 @@ textarea {
     }
 
     function importEmailsFromExcel(input, targetId) {
-      if (input && input.files && input.files[0]) {
-        lastExcelFile = input.files[0];
+  if (input && input.files && input.files[0]) {
+    lastExcelFile = input.files[0];
+  }
+  if (!lastExcelFile) {
+    alert("Veuillez sélectionner un fichier Excel.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheet = workbook.Sheets["Mail"];
+    if (!sheet) {
+      alert("Onglet 'Mail' introuvable dans le fichier Excel.");
+      return;
+    }
+
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const dataRows = rows.slice(1);
+
+    const type = document.getElementById("typeMail").value.toLowerCase();
+    const region = document.getElementById("region").value.toLowerCase();
+
+    let found = false;
+
+    for (const row of dataRows) {
+      const description = (row[1] || "").toString().toLowerCase();
+
+      // comparaison SOUPLE
+      if (description.includes(type) && description.includes(region)) {
+        const imported =
+          targetId === "toEmails" ? row[2] : row[3];
+
+        document.getElementById(targetId).value =
+          normalizeEmails(imported || "").join("; ");
+
+        found = true;
+        break;
       }
-      if (!lastExcelFile) {
-        alert("Veuillez sélectionner un fichier Excel.");
-        return;
-      }
+    }
+
+    if (!found) {
+      document.getElementById(targetId).value = "";
+      alert(
+        "Aucune correspondance trouvée dans l'Excel pour : " +
+        type + " " + region
+      );
+    }
+  };
+
+  reader.readAsArrayBuffer(lastExcelFile);
+}
+
 
       const reader = new FileReader();
       reader.onload = function (e) {
@@ -443,3 +490,4 @@ textarea {
   </script>
 </body>
 </html>
+
