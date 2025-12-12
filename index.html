@@ -4,490 +4,270 @@
   <meta charset="UTF-8" />
   <title>Générateur de Mails - Circet</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
   <style>
     body {
-  font-family: 'Segoe UI', Tahoma, sans-serif;
-  background: #0d1b2a; /* bleu nuit foncé */
-  color: #f4f4f4;
-  margin: 0;
-  padding: 20px;
-}
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #0d1b2a;
+      color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
 
-header {
-  background: linear-gradient(135deg, #ff7a00, #b85c00);
-  padding: 15px 20px;
-  display: flex;
-  align-items: center;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  border-radius: 8px;
-  margin-bottom: 25px;
-}
+    header {
+      background: linear-gradient(135deg, #ff7a00, #b85c00);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      color: #fff;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
 
-header img {
-  height: 60px;
-  margin-right: 20px;
-  border-radius: 6px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.6); /* relief */
-  background: rgba(0,0,0,0.2); /* léger contraste */
-  padding: 4px; /* contour autour du logo */
-}
+    header img {
+      height: 60px;
+      margin-right: 20px;
+      border-radius: 6px;
+    }
 
-h1 {
-  font-size: 26px;
-  font-weight: bold;
-  margin: 0;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-}
+    h1 { margin: 0; }
 
-h2 {
-  margin-top: 30px;
-  color: #ffb347;
-  border-left: 5px solid #ff7a00;
-  padding-left: 10px;
-}
+    section {
+      background: #1b263b;
+      padding: 20px;
+      margin-bottom: 25px;
+      border-radius: 10px;
+    }
 
-section {
-  background: #1b263b; /* bleu nuit clair */
-  padding: 20px;
-  margin-bottom: 25px;
-  border-radius: 10px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.5);
-}
+    label {
+      margin-top: 10px;
+      display: block;
+      color: #ffb347;
+      font-weight: 600;
+    }
 
-label {
-  display: block;
-  margin: 10px 0 5px;
-  font-weight: 600;
-  color: #ffb347;
-}
+    select, input, textarea {
+      width: 100%;
+      max-width: 600px;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: none;
+      background: #0d1b2a;
+      color: #fff;
+    }
 
-/* Inputs & selects */
-select, input[type="date"], input[type="text"], textarea {
-  width: 100%;
-  max-width: 600px;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  outline: none;
-  font-size: 14px;
-  background: #0d1b2a;
-  color: #f4f4f4;
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
-  transition: all 0.3s;
-}
+    textarea { min-height: 70px; }
 
-/* Pour améliorer lisibilité du calendrier natif */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) sepia(1) saturate(5) hue-rotate(180deg); 
-  cursor: pointer;
-}
+    .row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
 
-select:focus, input:focus, textarea:focus {
-  box-shadow: 0 0 8px #ff7a00;
-  background: #14243a;
-}
+    .button {
+      margin-top: 12px;
+      padding: 12px 25px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      background: linear-gradient(135deg, #ff7a00, #e65c00);
+      color: #fff;
+    }
 
-textarea {
-  min-height: 70px;
-  resize: vertical;
-}
+    .recipients {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-.button {
-  margin-top: 12px;
-  background: linear-gradient(135deg, #ff7a00, #e65c00);
-  color: #fff;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 14px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 5px 10px rgba(0,0,0,0.4);
-  transition: all 0.25s ease;
-}
-
-.button:hover {
-  background: linear-gradient(135deg, #ff9633, #ff7a00);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.6);
-}
-
-.button:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-}
-
-.recipients {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.recipients textarea {
-  flex: 1;
-}
-
-.row {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  align-items: flex-end;
-}
-
-.hint {
-  font-size: 12px;
-  color: #aaa;
-  margin-top: 6px;
-}
-
+    .recipients textarea {
+      flex: 1;
+    }
   </style>
 </head>
+
 <body>
-  <header>
-    <img src="https://i.imgur.com/gfK7XhS.png" alt="Logo Circet">
-    <h1>Générateur de mails Circet Orange Fibre</h1>
-  </header>
 
-  <!-- Section Génération -->
-  <section>
-    <div class="row">
-      <div>
-        <label>Type de mail :</label>
-        <select id="typeMail"></select>
-      </div>
+<header>
+  <img src="https://i.imgur.com/gfK7XhS.png">
+  <h1>Générateur de mails Circet Orange Fibre</h1>
+</header>
 
-      <div>
-        <label>Région :</label>
-        <select id="region"></select>
-      </div>
-
-      <div>
-        <label>Date :</label>
-        <input type="date" id="date" />
-      </div>
-
-      <div>
-        <label>Heure :</label>
-        <select id="heure">
-          <option>10h</option>
-          <option>12h</option>
-          <option>14h</option>
-          <option>15h30</option>
-          <option>16h</option>
-          <option>18h</option>
-        </select>
-      </div>
+<section>
+  <div class="row">
+    <div>
+      <label>Type de mail</label>
+      <select id="typeMail"></select>
     </div>
 
-    <label>📧 Destinataires :</label>
-    <div class="recipients">
-      <textarea id="toEmails" placeholder="email1@circet.fr; email2@circet.fr"></textarea>
-      <button class="button" onclick="handleImport('toEmails')">📂 Importer destinataires</button>
-      <input type="file" id="importTo" style="display:none" accept=".xls,.xlsx" onchange="importEmailsFromExcel(this, 'toEmails')" />
+    <div>
+      <label>Région</label>
+      <select id="region"></select>
     </div>
 
-    <label>📤 En copie (CC) :</label>
-    <div class="recipients">
-      <textarea id="ccEmails" placeholder="chef@circet.fr; controle@circet.fr"></textarea>
-      <button class="button" onclick="handleImport('ccEmails')">📂 Importer en copie (CC)</button>
-      <input type="file" id="importCC" style="display:none" accept=".xls,.xlsx" onchange="importEmailsFromExcel(this, 'ccEmails')" />
+    <div>
+      <label>Date</label>
+      <input type="date" id="date">
     </div>
 
-    <button class="button" onclick="genererMail()">📧 Générer le mail</button>
-  </section>
+    <div>
+      <label>Heure</label>
+      <select id="heure">
+        <option>10h</option>
+        <option>12h</option>
+        <option>14h</option>
+        <option>15h30</option>
+        <option>16h</option>
+        <option>18h</option>
+      </select>
+    </div>
+  </div>
 
-  <!-- Section Résultat -->
-  <section>
-    <h2>Objet du mail :</h2>
-    <textarea id="objet" readonly></textarea>
+  <label>📧 Destinataires</label>
+  <div class="recipients">
+    <textarea id="toEmails"></textarea>
+    <button class="button" onclick="handleImport('toEmails')">Importer</button>
+    <input type="file" id="importTo" hidden accept=".xls,.xlsx"
+           onchange="importEmailsFromExcel(this,'toEmails')">
+  </div>
 
-    <h2>Corps du mail :</h2>
-    <textarea id="corps" readonly></textarea>
+  <label>📤 CC</label>
+  <div class="recipients">
+    <textarea id="ccEmails"></textarea>
+    <button class="button" onclick="handleImport('ccEmails')">Importer</button>
+    <input type="file" id="importCC" hidden accept=".xls,.xlsx"
+           onchange="importEmailsFromExcel(this,'ccEmails')">
+  </div>
 
-    <button class="button" onclick="ouvrirOutlook()">📤 Ouvrir dans Outlook (texte + signature)</button>
-  </section>
+  <button class="button" onclick="genererMail()">📧 Générer</button>
+</section>
 
-  <!-- Section Gestion -->
-  <section>
-    <h2>➕ Gestion des mappings (Types/Régions)</h2>
-    <label>Type de mail :</label>
-    <input type="text" id="newType" placeholder="ex: Avancement ou nouveau type" />
+<section>
+  <label>Objet</label>
+  <textarea id="objet" readonly></textarea>
 
-    <label>Région :</label>
-    <input type="text" id="newRegion" placeholder="ex: IDF ou vide si national" />
+  <label>Corps</label>
+  <textarea id="corps" readonly></textarea>
 
-    <label>Corps du mail :</label>
-    <textarea id="newBody" placeholder="Texte par défaut pour ce type/région"></textarea>
+  <button class="button" onclick="ouvrirOutlook()">Ouvrir Outlook</button>
+</section>
 
-    <button class="button" onclick="ajouterTypeRegion()">➕ Ajouter au menu</button>
-  </section>
+<script>
+/* ===================== CONFIG ===================== */
 
-  <script>
-    const modeles = {
-      "Avancement": {
-        objet: "Avancement prod {REGION} {DATE}",
-        corps: "{MESSAGE}\nAvancement à {HEURE} ci-dessous, détails en PJ."
-      },
-      "Compte Rendu": {
-        objet: "Compte rendu {REGION} {DATE}",
-        corps: "Bonjour à tous,\nCompte rendu du jour ci-dessous, détails en PJ."
-      },
-      "Planning": {
-        objet: "Planning à chaud {REGION} {DATE}",
-        corps: "Bonsoir,\nVous trouverez en PJ. le planning de la journée de demain."
-      },
-      "Planification": {
-        objet: "Planification {REGION} {DATE}",
-        corps: "Bonjour,\nCi-joint la planification mise à jour."
-      },
-      "Synthèse du soir": {
-        objet: "Synthèse {DATE} {REGION}",
-        corps: "Bonjour,\nVous trouverez ci-dessous un aperçu des indicateurs du jour."
-      },
-      "Synthèse nationale Lot1": {
-        objet: "Synthèse nationale Lot1 {DATE}",
-        corps: "Bonjour,\nVous trouverez ci-dessous un aperçu de la synthèse nationale."
-      },
-      "Vision Flash": {
-        objet: "Vision flash lot 1 {REGION} S{SEMAINE}",
-        corps: "Bonjour à tous,\nSynthèse S{SEMAINE} ci-dessous, détails en PJ. *Chiffres en cours de consolidation"
-      }
-    };
+const TYPE_EXCEL_MAP = {
+  "Avancement": "avancement de prod",
+  "Synthèse du soir": "synthèse du soir",
+  "Planification": "planification",
+  "Planning": "planning",
+  "Compte Rendu": "compte-rendu",
+  "Vision Flash": "flash"
+};
 
-    // --- Sauvegarde / Chargement menus ---
-    function chargerMenus() {
-      let saved = JSON.parse(localStorage.getItem("mappingsMenus")) || { types: [], regions: [], bodies: {} };
-
-      const selectType = document.getElementById("typeMail");
-      const selectRegion = document.getElementById("region");
-
-      // valeurs de base
-      const baseTypes = Object.keys(modeles);
-      const baseRegions = ["IDF","CVL","Corse","Lot 2 PDL","74/01","63/03","PRM"];
-
-      [...baseTypes, ...saved.types].forEach(t => {
-        if (![...selectType.options].some(o => o.value === t)) {
-          const opt = document.createElement("option");
-          opt.value = t;
-          opt.textContent = t;
-          selectType.appendChild(opt);
-        }
-      });
-
-      [...baseRegions, ...saved.regions].forEach(r => {
-        if (![...selectRegion.options].some(o => o.value === r)) {
-          const opt = document.createElement("option");
-          opt.value = r;
-          opt.textContent = r;
-          selectRegion.appendChild(opt);
-        }
-      });
-    }
-
-    function ajouterTypeRegion() {
-      const type = document.getElementById("newType").value.trim();
-      const region = document.getElementById("newRegion").value.trim();
-      const body = document.getElementById("newBody").value.trim();
-      if (!type) { alert("Type obligatoire"); return; }
-
-      let saved = JSON.parse(localStorage.getItem("mappingsMenus")) || { types: [], regions: [], bodies: {} };
-      if (!saved.types.includes(type)) saved.types.push(type);
-      if (region && !saved.regions.includes(region)) saved.regions.push(region);
-
-      let key = region ? `${type}_${region}` : type;
-      saved.bodies[key] = body;
-
-      localStorage.setItem("mappingsMenus", JSON.stringify(saved));
-      alert("Ajouté et sauvegardé ! Recharge la page pour voir le menu mis à jour.");
-    }
-
-    // --- Reste (Excel, normalisation, génération) ---
-    let lastExcelFile = null;
-    let mappings = [];
-
-    function getMatchingKey() {
-      const type = document.getElementById("typeMail").value.trim();
-      const region = document.getElementById("region").value.trim();
-      if (type === "Synthèse nationale Lot1") return type.toLowerCase();
-      return `${type} ${region}`.toLowerCase();
-    }
-
-    function normalizeEmails(str) {
-      if (!str) return [];
-      return str.replace(/[ \t]/g, '').replace(/[\n\r]+/g, ';')
-        .replace(/,+/g, ';').replace(/;{2,}/g, ';').replace(/^;|;$/g, '')
-        .split(';').map(e => e.trim()).filter(e => e.length > 0);
-    }
-
-    function handleImport(targetId) {
-      if (lastExcelFile) {
-        importEmailsFromExcel({ files: [lastExcelFile] }, targetId);
-      } else {
-        if (targetId === 'toEmails') document.getElementById('importTo').click();
-        else document.getElementById('importCC').click();
-      }
-    }
-
-    function importEmailsFromExcel(input, targetId) {
-  if (input && input.files && input.files[0]) {
-    lastExcelFile = input.files[0];
+const modeles = {
+  "Avancement": {
+    objet: "Avancement prod {REGION} {DATE}",
+    corps: "Bonjour,\nAvancement à {HEURE} ci-dessous."
+  },
+  "Synthèse du soir": {
+    objet: "Synthèse {DATE} {REGION}",
+    corps: "Bonjour,\nSynthèse du jour ci-dessous."
   }
-  if (!lastExcelFile) {
-    alert("Veuillez sélectionner un fichier Excel.");
-    return;
-  }
+};
+
+const regions = ["IDF","CVL","Corse","PRM","63/03","74/01","Lot 2 PDL"];
+
+let lastExcelFile = null;
+
+/* ===================== INIT ===================== */
+
+window.onload = () => {
+  const typeSel = document.getElementById("typeMail");
+  Object.keys(modeles).forEach(t => typeSel.add(new Option(t,t)));
+
+  const regSel = document.getElementById("region");
+  regions.forEach(r => regSel.add(new Option(r,r)));
+};
+
+/* ===================== EXCEL ===================== */
+
+function handleImport(target) {
+  document.getElementById(
+    target === "toEmails" ? "importTo" : "importCC"
+  ).click();
+}
+
+function normalizeEmails(str) {
+  if (!str) return [];
+  return str.replace(/\s+/g,'')
+            .replace(/[\n,]+/g,';')
+            .split(';')
+            .filter(Boolean);
+}
+
+function importEmailsFromExcel(input, targetId) {
+  if (input.files[0]) lastExcelFile = input.files[0];
+  if (!lastExcelFile) return;
 
   const reader = new FileReader();
-  reader.onload = function (e) {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-    const sheet = workbook.Sheets["Mail"];
-    if (!sheet) {
-      alert("Onglet 'Mail' introuvable dans le fichier Excel.");
-      return;
-    }
+  reader.onload = e => {
+    const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+    const sheet = wb.Sheets["Mail"];
+    if (!sheet) return alert("Onglet Mail introuvable");
 
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    const dataRows = rows.slice(1);
+    const rows = XLSX.utils.sheet_to_json(sheet,{header:1}).slice(1);
 
-    const type = document.getElementById("typeMail").value.toLowerCase();
+    const typeUI = document.getElementById("typeMail").value;
     const region = document.getElementById("region").value.toLowerCase();
+    const typeExcel = (TYPE_EXCEL_MAP[typeUI] || typeUI).toLowerCase();
 
-    let found = false;
-
-    for (const row of dataRows) {
-      const description = (row[1] || "").toString().toLowerCase();
-
-      // comparaison SOUPLE
-      if (description.includes(type) && description.includes(region)) {
-        const imported =
-          targetId === "toEmails" ? row[2] : row[3];
-
+    for (const r of rows) {
+      const desc = (r[1]||"").toLowerCase();
+      if (desc.includes(typeExcel) && desc.includes(region)) {
+        const emails = targetId==="toEmails" ? r[2] : r[3];
         document.getElementById(targetId).value =
-          normalizeEmails(imported || "").join("; ");
-
-        found = true;
-        break;
+          normalizeEmails(emails).join("; ");
+        return;
       }
     }
-
-    if (!found) {
-      document.getElementById(targetId).value = "";
-      alert(
-        "Aucune correspondance trouvée dans l'Excel pour : " +
-        type + " " + region
-      );
-    }
+    alert("Aucune correspondance Excel");
   };
-
   reader.readAsArrayBuffer(lastExcelFile);
 }
 
+/* ===================== MAIL ===================== */
 
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheet = workbook.Sheets["Mail"];
-        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+function genererMail() {
+  const type = typeMail.value;
+  const region = region.value;
+  const date = new Date(dateInput.value);
+  if (isNaN(date)) return alert("Date manquante");
 
-        mappings = json;
-        const key = getMatchingKey();
-        const dataRows = json.slice(1);
+  const objet = modeles[type].objet
+    .replace("{REGION}",region)
+    .replace("{DATE}",date.toLocaleDateString("fr-FR"));
 
-        let found = false;
-        for (let i = 0; i < dataRows.length; i++) {
-          const row = dataRows[i];
-          const entryKey = (row[0] || "").toString().toLowerCase().trim();
-          if (entryKey === key) {
-            const imported = (targetId === 'toEmails' ? row[1] : row[2]) || "";
-            document.getElementById(targetId).value = normalizeEmails(imported).join('; ');
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          document.getElementById(targetId).value = "";
-          alert("Aucune correspondance trouvée dans l'Excel pour : " + key);
-        }
-      };
-      reader.readAsArrayBuffer(lastExcelFile);
-    }
+  const corps = modeles[type].corps
+    .replace("{HEURE}",heure.value)
+    .replace("{REGION}",region);
 
-    function getFormattedDate(date) {
-      if (!date) return "JJ/MM/AAAA";
-      const d = new Date(date);
-      return isNaN(d) ? "JJ/MM/AAAA" : d.toLocaleDateString('fr-FR');
-    }
+  document.getElementById("objet").value = objet;
+  document.getElementById("corps").value = corps;
+}
 
-    function getWeekNumber(date) {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-      const week1 = new Date(d.getFullYear(), 0, 4);
-      return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-    }
+function ouvrirOutlook() {
+  const to = encodeURIComponent(toEmails.value);
+  const cc = encodeURIComponent(ccEmails.value);
+  const subject = encodeURIComponent(objet.value);
+  const body = encodeURIComponent(corps.value.replace(/\n/g,"\r\n"));
 
-    function genererMail() {
-      const type = document.getElementById("typeMail").value;
-      const region = document.getElementById("region").value;
-      const date = document.getElementById("date").value;
-      if (!date) { alert("Merci de sélectionner une date."); return; }
-      const heure = document.getElementById("heure").value;
-      const semaine = getWeekNumber(date);
-      const dateStr = getFormattedDate(date);
+  window.location.href =
+    `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`;
+}
+</script>
 
-      let objetTpl = modeles[type]?.objet || "{TYPE} {REGION} {DATE}";
-      let corpsTpl = modeles[type]?.corps || "Message auto";
-
-      // Vérifier si un corps personnalisé existe
-      let saved = JSON.parse(localStorage.getItem("mappingsMenus")) || { bodies: {} };
-      let key = region ? `${type}_${region}` : type;
-      if (saved.bodies[key]) {
-        corpsTpl = saved.bodies[key];
-      }
-
-      let message = "";
-      if (type === "Avancement" && heure === "10h") {
-        message = "Bonjour à tous,";
-      }
-
-      const replacements = {
-        "{REGION}": region,
-        "{DATE}": dateStr,
-        "{HEURE}": heure,
-        "{SEMAINE}": semaine,
-        "{MESSAGE}": message,
-        "{TYPE}": type
-      };
-
-      for (const token in replacements) {
-        objetTpl = objetTpl.replaceAll(token, replacements[token]);
-        corpsTpl = corpsTpl.replaceAll(token, replacements[token]);
-      }
-
-      document.getElementById("objet").value = objetTpl.trim();
-      document.getElementById("corps").value = corpsTpl.trim();
-    }
-
-    function ouvrirOutlook() {
-      const toRaw = document.getElementById("toEmails").value.trim();
-      const ccRaw = document.getElementById("ccEmails").value.trim();
-      const subject = document.getElementById("objet").value.trim();
-      let bodyText = document.getElementById("corps").value.trim();
-      const to = normalizeEmails(toRaw).join('; ');
-      const cc = normalizeEmails(ccRaw).join('; ');
-      bodyText = bodyText.replace(/\n/g, '\r\n');
-      const mailto = `mailto:${encodeURIComponent(to)}?cc=${encodeURIComponent(cc)}` +
-                     `&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
-      window.location.href = mailto;
-    }
-
-    window.onload = chargerMenus;
-  </script>
 </body>
 </html>
-
